@@ -12,6 +12,7 @@ import {
   Star,
   MapPin,
   AtSign,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -426,17 +427,31 @@ export default function OutreachPage() {
                         </button>
                       </span>
                     ) : (
-                      <button
-                        onClick={() => {
-                          setEditingEmail(contact.id);
-                          setEditEmailValue(contact.email || "");
-                        }}
-                        className="flex items-center gap-0.5 hover:text-primary"
-                        title={contact.email ? "Editar email" : "Añadir email"}
-                      >
-                        <AtSign className="h-3 w-3" />
-                        {contact.email || <span className="italic text-gray-400">Añadir email</span>}
-                      </button>
+                      <span className="flex items-center gap-0.5">
+                        <button
+                          onClick={() => {
+                            setEditingEmail(contact.id);
+                            setEditEmailValue(contact.email || "");
+                          }}
+                          className="flex items-center gap-0.5 hover:text-primary"
+                          title={contact.email ? "Editar email" : "Añadir email"}
+                        >
+                          <AtSign className="h-3 w-3" />
+                          {contact.email || <span className="italic text-gray-400">Añadir email</span>}
+                        </button>
+                        {contact.email && (
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(contact.email!);
+                              toast.success("Email copiado");
+                            }}
+                            className="hover:text-primary ml-0.5"
+                            title="Copiar email"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </button>
+                        )}
+                      </span>
                     )}
                     {contact.website && (
                       <a href={contact.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-0.5 hover:text-primary">

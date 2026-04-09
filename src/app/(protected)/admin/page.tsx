@@ -24,6 +24,7 @@ interface Stats {
     document_number: string;
     document_type: string;
     total: number;
+    user_email: string;
     created_at: string;
   }[];
   documentsByDay: { date: string; count: number }[];
@@ -52,11 +53,12 @@ export default function AdminPage() {
         { data: documents },
         { data: contacts },
         { data: profiles },
+        { data: allProfiles },
       ] = await Promise.all([
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase
           .from("documents")
-          .select("document_number, document_type, total, status, created_at")
+          .select("document_number, document_type, total, status, user_id, created_at")
           .order("created_at", { ascending: false }),
         supabase
           .from("contacts")
@@ -66,7 +68,16 @@ export default function AdminPage() {
           .select("email, created_at")
           .order("created_at", { ascending: false })
           .limit(10),
+        supabase
+          .from("profiles")
+          .select("id, email"),
       ]);
+
+      // Map user_id → email
+      const userEmailMap: Record<string, string> = {};
+      (allProfiles || []).forEach((p) => {
+        userEmailMap[p.id] = p.email || "—";
+      });
 
       const docs = documents || [];
       const cons = contacts || [];
@@ -94,7 +105,10 @@ export default function AdminPage() {
           email: p.email || "—",
           created_at: p.created_at,
         })),
-        recentDocuments: docs.slice(0, 10),
+        recentDocuments: docs.slice(0, 10).map((d) => ({
+          ...d,
+          user_email: userEmailMap[d.user_id] || "—",
+        })),
         documentsByDay,
       });
       setLoading(false);
@@ -267,11 +281,11 @@ export default function AdminPage() {
                 {stats.recentDocuments.map((d, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between text-sm"
+                    className="flex items-center justify-between text-sm gap-2"
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       <span
-                        className={`w-1.5 h-1.5 rounded-full ${
+                        className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                           d.document_type === "invoice"
                             ? "bg-blue-500"
                             : "bg-orange-500"
@@ -280,8 +294,11 @@ export default function AdminPage() {
                       <span className="font-mono text-xs">
                         {d.document_number}
                       </span>
+                      <span className="text-[10px] text-muted-foreground truncate">
+                        {d.user_email}
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground shrink-0">
                       {formatDate(d.created_at)}
                     </span>
                   </div>
