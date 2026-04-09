@@ -26,16 +26,34 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    // Session was already established by /auth/callback
-    // Just verify user is authenticated
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
+
+    // Listen for PASSWORD_RECOVERY event — Supabase client auto-detects
+    // the hash fragment (#access_token=...&type=recovery) and fires this event
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
         setReady(true);
-      } else {
-        setError(true);
       }
     });
+
+    // Fallback: if the event already fired before listener was set up,
+    // or if user already has a session from /auth/callback
+    const timer = setTimeout(() => {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) {
+          setReady(true);
+        } else {
+          setError(true);
+        }
+      });
+    }, 2000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {
