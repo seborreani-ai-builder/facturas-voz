@@ -45,7 +45,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from auth pages
+  // Redirect authenticated users away from auth pages (except reset-password)
   const authPaths = ["/login", "/register"];
   const isAuthRoute = authPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)

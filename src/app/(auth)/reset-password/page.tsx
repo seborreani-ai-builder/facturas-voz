@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mic } from "lucide-react";
 import { toast } from "sonner";
@@ -18,22 +18,7 @@ import {
 } from "@/components/ui/card";
 
 export default function ResetPasswordPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-        </div>
-      }
-    >
-      <ResetPasswordForm />
-    </Suspense>
-  );
-}
-
-function ResetPasswordForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,23 +26,17 @@ function ResetPasswordForm() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    const code = searchParams.get("code");
-    if (!code) {
-      setError(true);
-      return;
-    }
-
+    // Session was already established by /auth/callback
+    // Just verify user is authenticated
     const supabase = createClient();
-    supabase.auth
-      .exchangeCodeForSession(code)
-      .then(({ error }) => {
-        if (error) {
-          setError(true);
-        } else {
-          setReady(true);
-        }
-      });
-  }, [searchParams]);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setReady(true);
+      } else {
+        setError(true);
+      }
+    });
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
