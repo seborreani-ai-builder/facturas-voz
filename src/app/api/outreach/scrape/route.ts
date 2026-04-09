@@ -15,8 +15,39 @@ const CONTACT_PATHS = [
   "/sobre-nosotros", "/quienes-somos", "/empresa",
 ];
 
+// Decode Cloudflare email obfuscation
+function decodeCfEmail(encoded: string): string {
+  const key = parseInt(encoded.substring(0, 2), 16);
+  let email = "";
+  for (let i = 2; i < encoded.length; i += 2) {
+    email += String.fromCharCode(parseInt(encoded.substring(i, i + 2), 16) ^ key);
+  }
+  return email;
+}
+
 function extractEmailsFromHtml(html: string): string[] {
-  const emails = html.match(EMAIL_REGEX) || [];
+  const emails: string[] = [];
+
+  // Standard email regex
+  const standard = html.match(EMAIL_REGEX) || [];
+  emails.push(...standard);
+
+  // Cloudflare obfuscated emails
+  const cfPattern = /data-cfemail="([a-f0-9]+)"/gi;
+  let cfMatch;
+  while ((cfMatch = cfPattern.exec(html)) !== null) {
+    try {
+      emails.push(decodeCfEmail(cfMatch[1]));
+    } catch { /* skip invalid */ }
+  }
+
+  // mailto: links (sometimes hidden from plain regex)
+  const mailtoPattern = /mailto:([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/gi;
+  let mailtoMatch;
+  while ((mailtoMatch = mailtoPattern.exec(html)) !== null) {
+    emails.push(mailtoMatch[1]);
+  }
+
   return [...new Set(emails)].filter(
     (e) => !FALSE_POSITIVE_PATTERNS.some((p) => e.toLowerCase().includes(p))
   );
