@@ -7,8 +7,8 @@ import { UserMenu } from "@/components/user-menu";
 
 // Admin emails that can see the Outreach section
 const ADMIN_EMAILS = [
+  "seborreani@gmail.com",
   "seborabadias@gmail.com",
-  // Add more admin emails here
 ];
 
 export default async function ProtectedLayout({
