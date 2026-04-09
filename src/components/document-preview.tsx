@@ -94,11 +94,11 @@ export function DocumentPreview({
   const [validUntil, setValidUntil] = useState(initialValidUntil || "");
   const [clients, setClients] = useState<Client[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [matchedClient, setMatchedClient] = useState<Client | null>(null);
-  const [matchDismissed, setMatchDismissed] = useState(false);
+  const [appliedClient, setAppliedClient] = useState<Client | null>(null);
+  const [originalAiName, setOriginalAiName] = useState<string | null>(null);
   const nameInputRef = useRef<HTMLDivElement>(null);
 
-  // Load saved clients
+  // Load saved clients + auto-apply match
   useEffect(() => {
     const supabase = createClient();
     supabase
@@ -108,11 +108,17 @@ export function DocumentPreview({
       .then(({ data }) => {
         if (data) {
           setClients(data);
-          // Auto-match if we have an initial client name (from AI extraction)
+          // Auto-match and auto-apply if AI extracted a client name
           if (clientName && data.length > 0) {
             const match = findClientMatch(clientName, data);
             if (match) {
-              setMatchedClient(match);
+              setOriginalAiName(clientName);
+              setAppliedClient(match);
+              // Auto-fill with saved data
+              setClientName(match.name);
+              if (match.email) setClientEmail(match.email);
+              if (match.nif) setClientNif(match.nif);
+              if (match.address) setClientAddress(match.address);
             }
           }
         }
@@ -121,17 +127,22 @@ export function DocumentPreview({
   }, []);
 
   function applyClientMatch(client: Client) {
+    setOriginalAiName(null);
+    setAppliedClient(null);
     setClientName(client.name);
-    setClientEmail(client.email || clientEmail || "");
-    setClientNif(client.nif || clientNif || "");
-    setClientAddress(client.address || clientAddress || "");
-    setMatchedClient(null);
-    setMatchDismissed(true);
+    setClientEmail(client.email || "");
+    setClientNif(client.nif || "");
+    setClientAddress(client.address || "");
   }
 
-  function dismissMatch() {
-    setMatchedClient(null);
-    setMatchDismissed(true);
+  function revertToNewClient() {
+    // Revert to AI-extracted name, clear saved data
+    setClientName(originalAiName || "");
+    setClientEmail("");
+    setClientNif("");
+    setClientAddress("");
+    setAppliedClient(null);
+    setOriginalAiName(null);
   }
 
   const subtotal = items.reduce(
@@ -200,35 +211,24 @@ export function DocumentPreview({
 
       {/* Client info */}
       <div className="space-y-4">
-        {/* Match banner — shown when AI extracted a name that matches a saved client */}
-        {matchedClient && !matchDismissed && (
-          <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <UserCheck className="h-5 w-5 text-blue-600 shrink-0" />
+        {/* Auto-matched banner — data already applied, option to revert */}
+        {appliedClient && (
+          <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <UserCheck className="h-5 w-5 text-green-600 shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-blue-900">
-                Cliente encontrado: {matchedClient.name}
+              <p className="text-sm font-medium text-green-900">
+                Datos de {appliedClient.name} aplicados
               </p>
-              {matchedClient.email && (
-                <p className="text-xs text-blue-600 truncate">{matchedClient.email}</p>
-              )}
             </div>
-            <div className="flex gap-2 shrink-0">
-              <Button
-                size="sm"
-                className="!h-8 text-xs"
-                onClick={() => applyClientMatch(matchedClient)}
-              >
-                Usar datos
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="!h-8 text-xs"
-                onClick={dismissMatch}
-              >
-                Nuevo
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="!h-8 text-xs shrink-0"
+              onClick={revertToNewClient}
+            >
+              <UserPlus className="h-3 w-3 mr-1" />
+              Crear nuevo
+            </Button>
           </div>
         )}
 
@@ -263,12 +263,10 @@ export function DocumentPreview({
               onChange={(e) => {
                 setClientName(e.target.value);
                 setShowSuggestions(e.target.value.length > 0 && clients.length > 0);
-                // Check for match as user types
-                if (!matchDismissed && e.target.value.length > 2) {
-                  const match = findClientMatch(e.target.value, clients);
-                  setMatchedClient(match ?? null);
-                } else {
-                  setMatchedClient(null);
+                // Clear applied match if user edits the name
+                if (appliedClient) {
+                  setAppliedClient(null);
+                  setOriginalAiName(null);
                 }
               }}
               onFocus={() => {
