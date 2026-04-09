@@ -212,6 +212,11 @@ export function InvoicePDF({ document: doc, items, profile }: InvoicePDFProps) {
             )}
             <View>
               <Text style={styles.companyName}>{profile.company_name}</Text>
+              {profile.phone && (
+                <Text style={{ fontSize: 11, fontFamily: "Helvetica-Bold", color: "#111827", marginBottom: 2 }}>
+                  Tel: {profile.phone}
+                </Text>
+              )}
               <Text style={styles.companyInfo}>
                 NIF: {profile.nif}
                 {"\n"}
@@ -219,7 +224,6 @@ export function InvoicePDF({ document: doc, items, profile }: InvoicePDFProps) {
                 {"\n"}
                 {profile.postal_code} {profile.city}
                 {profile.province ? `, ${profile.province}` : ""}
-                {profile.phone ? `\nTel: ${profile.phone}` : ""}
                 {profile.email ? `\n${profile.email}` : ""}
               </Text>
             </View>
