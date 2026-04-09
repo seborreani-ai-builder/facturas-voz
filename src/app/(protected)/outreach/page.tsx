@@ -55,6 +55,8 @@ export default function OutreachPage() {
   const [filterEmail, setFilterEmail] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [generatingEmail, setGeneratingEmail] = useState<string | null>(null);
+  const [editingEmail, setEditingEmail] = useState<string | null>(null);
+  const [editEmailValue, setEditEmailValue] = useState("");
 
   useEffect(() => {
     loadContacts();
@@ -122,6 +124,22 @@ export default function OutreachPage() {
       toast.error(e instanceof Error ? e.message : "Error generando email");
     }
     setGeneratingEmail(null);
+  }
+
+  async function saveEmail(contactId: string) {
+    const supabase = createClient();
+    await supabase
+      .from("contacts")
+      .update({ email: editEmailValue || null })
+      .eq("id", contactId);
+
+    setContacts((prev) =>
+      prev.map((c) =>
+        c.id === contactId ? { ...c, email: editEmailValue || null } : c
+      )
+    );
+    setEditingEmail(null);
+    toast.success("Email guardado");
   }
 
   async function markContacted(contactId: string) {
@@ -389,11 +407,36 @@ export default function OutreachPage() {
                         {contact.phone}
                       </a>
                     )}
-                    {contact.email && (
-                      <a href={`mailto:${contact.email}`} className="flex items-center gap-0.5 hover:text-primary">
+                    {editingEmail === contact.id ? (
+                      <span className="flex items-center gap-1">
+                        <input
+                          type="email"
+                          value={editEmailValue}
+                          onChange={(e) => setEditEmailValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveEmail(contact.id);
+                            if (e.key === "Escape") setEditingEmail(null);
+                          }}
+                          autoFocus
+                          placeholder="email@ejemplo.com"
+                          className="h-6 w-44 text-xs border rounded px-1.5 outline-none focus:ring-1 focus:ring-ring"
+                        />
+                        <button onClick={() => saveEmail(contact.id)} className="text-green-600 hover:text-green-700">
+                          <Check className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditingEmail(contact.id);
+                          setEditEmailValue(contact.email || "");
+                        }}
+                        className="flex items-center gap-0.5 hover:text-primary"
+                        title={contact.email ? "Editar email" : "Añadir email"}
+                      >
                         <AtSign className="h-3 w-3" />
-                        {contact.email}
-                      </a>
+                        {contact.email || <span className="italic text-gray-400">Añadir email</span>}
+                      </button>
                     )}
                     {contact.website && (
                       <a href={contact.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-0.5 hover:text-primary">
