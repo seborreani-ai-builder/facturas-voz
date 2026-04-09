@@ -16,27 +16,39 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    if (body.audio) {
-      // Audio input: base64 encoded audio
-      const result = await extractInvoiceFromAudio(
-        body.audio,
-        body.mimeType || "audio/webm"
+    if (!body.audio && !body.text) {
+      return NextResponse.json(
+        { error: "Se necesita audio o texto" },
+        { status: 400 }
       );
-      return NextResponse.json(result);
     }
 
-    if (body.text) {
-      // Text input
-      const result = await extractInvoiceData(body.text);
-      return NextResponse.json(result);
+    // Retry up to 2 times on failure (Gemini cold start / transient errors)
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        if (body.audio) {
+          const result = await extractInvoiceFromAudio(
+            body.audio,
+            body.mimeType || "audio/webm"
+          );
+          return NextResponse.json(result);
+        } else {
+          const result = await extractInvoiceData(body.text);
+          return NextResponse.json(result);
+        }
+      } catch (err) {
+        lastError = err;
+        console.error(`Extract attempt ${attempt + 1} failed:`, err);
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        }
+      }
     }
 
-    return NextResponse.json(
-      { error: "Se necesita audio o texto" },
-      { status: 400 }
-    );
+    throw lastError;
   } catch (error) {
-    console.error("Extract error:", error);
+    console.error("Extract error (all retries failed):", error);
     return NextResponse.json(
       { error: "Error al procesar. Inténtalo de nuevo." },
       { status: 500 }
