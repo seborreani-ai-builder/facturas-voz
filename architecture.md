@@ -166,11 +166,32 @@ Contact data (name, category, province)
    Email text in Spanish
 ```
 
+## Client Matching System
+- `normalize()` — strip accents + lowercase for comparison
+- `fuzzyMatch()` — Levenshtein distance ≤ 20% tolerance
+- `findClientMatch()` — exact normalized → substring → fuzzy
+- Auto-applies saved client data when AI extracts a matching name
+- User can revert to "Crear nuevo" if match is wrong
+
+## Email Scraping (Outreach)
+For each contact with a website, scrapes up to 8 pages:
+- Homepage + /contacto, /contact, /contacta, /about, /sobre-nosotros, /quienes-somos, /empresa
+- Extracts via: standard regex, Cloudflare email decode (data-cfemail), mailto links
+- Subpages fetched in parallel, no AI cost
+
+## Admin Panel (/admin)
+- KPIs: users, documents, invoices, quotes
+- Outreach stats: contacts, with email, contacted
+- Documents by day chart (14 days)
+- Recent signups + recent documents with user email
+
 ## Security
 - All API routes check Supabase auth session
 - Row Level Security (RLS) on all tables — users can only access their own data
 - API keys stored in environment variables, never exposed to client
 - Audio processed server-side only
+- Admin pages restricted by ADMIN_EMAILS whitelist
+- Gemini API retry (3 attempts with backoff) for transient errors
 
 ## Deployment
 
