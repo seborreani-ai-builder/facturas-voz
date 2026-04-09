@@ -185,20 +185,6 @@ export function DocumentPreview({
       {/* Client info */}
       <div className="space-y-4">
         <h3 className="font-semibold">Datos del cliente</h3>
-        {clients.length > 0 && (
-          <Select onValueChange={(v: string | null) => { if (v) handleClientSelect(v); }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccionar cliente guardado" />
-            </SelectTrigger>
-            <SelectContent>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label htmlFor="client_name" className="text-sm">
@@ -206,10 +192,29 @@ export function DocumentPreview({
             </Label>
             <Input
               id="client_name"
+              list="saved-clients"
               placeholder="Nombre del cliente"
               value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
+              onChange={(e) => {
+                setClientName(e.target.value);
+                // Auto-fill from saved client
+                const match = clients.find(
+                  (c) => c.name.toLowerCase() === e.target.value.toLowerCase()
+                );
+                if (match) {
+                  setClientEmail(match.email || "");
+                  setClientNif(match.nif || "");
+                  setClientAddress(match.address || "");
+                }
+              }}
             />
+            {clients.length > 0 && (
+              <datalist id="saved-clients">
+                {clients.map((c) => (
+                  <option key={c.id} value={c.name} />
+                ))}
+              </datalist>
+            )}
           </div>
           <div className="space-y-1">
             <Label htmlFor="client_email" className="text-sm">
@@ -399,17 +404,19 @@ export function DocumentPreview({
       </div>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-3 pt-2">
+      <div className="flex flex-col sm:flex-row gap-3 pt-4 pb-2">
         <Button
           variant="outline"
-          className="flex-1"
+          size="lg"
+          className="flex-1 h-12 text-base font-medium"
           onClick={() => onSave(buildData("draft"))}
           disabled={saving}
         >
           {saving ? "Guardando..." : "Guardar"}
         </Button>
         <Button
-          className="flex-1"
+          size="lg"
+          className="flex-1 h-12 text-base font-medium"
           onClick={() => {
             if (!clientEmail) {
               onSave(buildData("draft"));
@@ -419,7 +426,7 @@ export function DocumentPreview({
           }}
           disabled={saving}
         >
-          {clientEmail ? "Guardar y enviar al cliente" : "Guardar"}
+          {clientEmail ? "Guardar y enviar" : "Guardar"}
         </Button>
       </div>
     </div>

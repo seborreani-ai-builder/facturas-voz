@@ -168,12 +168,11 @@ export default function DashboardPage() {
             />
           </div>
           <div className="flex gap-2">
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
+            <Select value={statusFilter === "all" ? null : statusFilter} onValueChange={(v: string | null) => setStatusFilter(v ?? "all")}>
               <SelectTrigger className="w-[140px] h-9">
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="draft">Pendiente</SelectItem>
                 <SelectItem value="sent">Enviado</SelectItem>
                 <SelectItem value="accepted">Aceptado</SelectItem>
@@ -181,6 +180,16 @@ export default function DashboardPage() {
                 <SelectItem value="rejected">Rechazado</SelectItem>
               </SelectContent>
             </Select>
+            {statusFilter !== "all" && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-9 text-xs text-muted-foreground"
+                onClick={() => setStatusFilter("all")}
+              >
+                Limpiar
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

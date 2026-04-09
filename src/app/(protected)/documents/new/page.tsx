@@ -185,14 +185,14 @@ function NewDocumentContent() {
       </div>
 
       {/* Step Indicator */}
-      <div className="flex items-center gap-2 mb-6 px-1">
+      <div className="flex items-center justify-center gap-3 mb-6">
         {stepLabels.map((s, i) => {
           const Icon = s.icon;
           const isActive = i === stepIndex;
           const isCompleted = i < stepIndex;
           return (
-            <div key={s.key} className="flex items-center gap-2 flex-1">
-              <div className="flex items-center gap-2 flex-1">
+            <div key={s.key} className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
                 <div
                   className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-medium transition-all duration-300 ${
                     isActive
@@ -205,7 +205,7 @@ function NewDocumentContent() {
                   <Icon className="h-3.5 w-3.5" />
                 </div>
                 <span
-                  className={`text-xs font-medium hidden sm:inline transition-colors ${
+                  className={`text-xs font-medium transition-colors ${
                     isActive
                       ? "text-foreground"
                       : isCompleted
@@ -218,7 +218,7 @@ function NewDocumentContent() {
               </div>
               {i < stepLabels.length - 1 && (
                 <div
-                  className={`h-px flex-1 min-w-4 transition-colors duration-300 ${
+                  className={`h-px w-8 transition-colors duration-300 ${
                     isCompleted ? "bg-primary/40" : "bg-border"
                   }`}
                 />

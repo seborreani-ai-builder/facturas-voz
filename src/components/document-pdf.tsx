@@ -5,6 +5,7 @@ import {
   View,
   StyleSheet,
   Font,
+  Image,
 } from "@react-pdf/renderer";
 import type {
   Document as DocType,
@@ -23,6 +24,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 30,
+  },
+  companyHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+  },
+  companyLogo: {
+    width: 50,
+    height: 50,
+    borderRadius: 4,
+    objectFit: "contain" as const,
   },
   companyName: {
     fontSize: 18,
@@ -194,18 +206,23 @@ export function InvoicePDF({ document: doc, items, profile }: InvoicePDFProps) {
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.companyName}>{profile.company_name}</Text>
-            <Text style={styles.companyInfo}>
-              NIF: {profile.nif}
-              {"\n"}
-              {profile.address}
-              {"\n"}
-              {profile.postal_code} {profile.city}
-              {profile.province ? `, ${profile.province}` : ""}
-              {profile.phone ? `\nTel: ${profile.phone}` : ""}
-              {profile.email ? `\n${profile.email}` : ""}
-            </Text>
+          <View style={styles.companyHeader}>
+            {profile.logo_url && (
+              <Image src={profile.logo_url} style={styles.companyLogo} />
+            )}
+            <View>
+              <Text style={styles.companyName}>{profile.company_name}</Text>
+              <Text style={styles.companyInfo}>
+                NIF: {profile.nif}
+                {"\n"}
+                {profile.address}
+                {"\n"}
+                {profile.postal_code} {profile.city}
+                {profile.province ? `, ${profile.province}` : ""}
+                {profile.phone ? `\nTel: ${profile.phone}` : ""}
+                {profile.email ? `\n${profile.email}` : ""}
+              </Text>
+            </View>
           </View>
           <View>
             <Text style={styles.docTitle}>{typeLabel}</Text>

@@ -1,0 +1,20 @@
+-- Storage bucket "logos" para logos de empresa
+--
+-- Los buckets de Supabase Storage no se pueden crear facilmente via SQL.
+-- Crea el bucket manualmente desde el dashboard de Supabase:
+--
+-- 1. Ve a Storage en el panel de Supabase
+-- 2. Crea un nuevo bucket llamado "logos"
+-- 3. Marcalo como publico (Public bucket)
+-- 4. En Policies, agrega una policy para INSERT y UPDATE que permita
+--    a usuarios autenticados subir archivos a su propia carpeta:
+--
+--    Nombre: "Users can upload their own logos"
+--    Operacion: INSERT, UPDATE
+--    Policy: (auth.uid()::text = (storage.foldername(name))[1])
+--
+-- 5. Agrega una policy para SELECT publica (para que los logos sean accesibles en PDFs):
+--
+--    Nombre: "Logos are publicly accessible"
+--    Operacion: SELECT
+--    Policy: true

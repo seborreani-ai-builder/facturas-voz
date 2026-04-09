@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Camera, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,7 +40,10 @@ export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [isNew, setIsNew] = useState(true);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     company_name: "",
     nif: "",
@@ -69,6 +73,7 @@ export default function ProfilePage() {
 
       if (data) {
         setIsNew(false);
+        setLogoUrl(data.logo_url || null);
         setForm({
           company_name: data.company_name || "",
           nif: data.nif || "",
@@ -91,6 +96,75 @@ export default function ProfilePage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Solo se permiten archivos de imagen");
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("La imagen no puede superar 2MB");
+      return;
+    }
+
+    setUploadingLogo(true);
+
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast.error("Sesion expirada");
+        return;
+      }
+
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${user.id}/logo.${fileExt}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("logos")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        toast.error("Error al subir la imagen: " + uploadError.message);
+        return;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("logos")
+        .getPublicUrl(filePath);
+
+      const newLogoUrl = urlData.publicUrl;
+
+      // Update profile with logo URL
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ logo_url: newLogoUrl })
+        .eq("id", user.id);
+
+      if (updateError) {
+        toast.error("Error al guardar la URL del logo: " + updateError.message);
+        return;
+      }
+
+      setLogoUrl(newLogoUrl);
+      toast.success("Logo actualizado");
+    } catch {
+      toast.error("Error inesperado al subir el logo");
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -106,14 +180,15 @@ export default function ProfilePage() {
       return;
     }
 
+    const formWithLogo = { ...form, logo_url: logoUrl };
     const profileData = {
       id: user.id,
-      ...form,
+      ...formWithLogo,
     };
 
     const { error } = isNew
       ? await supabase.from("profiles").insert(profileData)
-      : await supabase.from("profiles").update(form).eq("id", user.id);
+      : await supabase.from("profiles").update(formWithLogo).eq("id", user.id);
 
     if (error) {
       toast.error("Error al guardar: " + error.message);
@@ -154,6 +229,51 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Logo upload */}
+            <div className="flex flex-col items-center gap-3">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingLogo}
+                className="relative group h-24 w-24 rounded-full border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 transition-colors flex items-center justify-center overflow-hidden bg-muted/50"
+              >
+                {uploadingLogo ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                ) : logoUrl ? (
+                  <>
+                    <img
+                      src={logoUrl}
+                      alt="Logo de empresa"
+                      className="h-full w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Camera className="h-5 w-5 text-white" />
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center gap-1">
+                    {form.company_name ? (
+                      <span className="text-xl font-bold text-muted-foreground">
+                        {form.company_name.substring(0, 2).toUpperCase()}
+                      </span>
+                    ) : (
+                      <Camera className="h-6 w-6 text-muted-foreground/60" />
+                    )}
+                  </div>
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                className="hidden"
+              />
+              <p className="text-xs text-muted-foreground">
+                Logo de empresa (aparecera en tus facturas)
+              </p>
+            </div>
+
             {/* Company info */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">

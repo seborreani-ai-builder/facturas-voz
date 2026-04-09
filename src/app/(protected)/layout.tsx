@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Mic, FileText, User, LogOut, AlertTriangle } from "lucide-react";
+import { Mic, FileText, AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { UserMenu } from "@/components/user-menu";
 
 // Admin emails that can see the Outreach section
 const ADMIN_EMAILS = [
@@ -29,12 +30,17 @@ export default async function ProtectedLayout({
   // Check if profile exists
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id")
+    .select("id, company_name")
     .eq("id", user.id)
     .single();
 
   // Redirect to profile setup if no profile (except if already on /profile)
   const hasProfile = !!profile;
+
+  // Get initials from company name (first 2 letters) for the avatar
+  const initials = profile?.company_name
+    ? profile.company_name.substring(0, 2).toUpperCase()
+    : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-muted/40">
@@ -81,33 +87,12 @@ export default async function ProtectedLayout({
                 </Button>
               </Link>
             )}
-            <Link href="/profile">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              >
-                <User className="h-4 w-4" />
-                <span className="hidden sm:inline text-sm font-medium">
-                  Perfil
-                </span>
-              </Button>
-            </Link>
-
             <div className="w-px h-5 bg-border mx-1 hidden sm:block" />
 
-            <form action="/api/auth/signout" method="POST">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline text-sm font-medium">
-                  Salir
-                </span>
-              </Button>
-            </form>
+            <UserMenu
+              email={user.email || ""}
+              initials={initials}
+            />
           </nav>
         </div>
       </header>
