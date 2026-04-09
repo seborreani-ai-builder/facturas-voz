@@ -23,7 +23,7 @@ export async function sendInvoiceEmail({
   const filename = `${documentNumber}.pdf`;
 
   const { data, error } = await getResend().emails.send({
-    from: process.env.RESEND_FROM_EMAIL!,
+    from: `VozFactura <${process.env.RESEND_FROM_EMAIL!}>`,
     to,
     subject: `${typeLabel} ${documentNumber} de ${companyName}`,
     html: `

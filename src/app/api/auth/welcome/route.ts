@@ -20,7 +20,7 @@ export async function POST() {
   }
 
   const { error } = await resend.emails.send({
-    from: process.env.RESEND_FROM_EMAIL!,
+    from: `VozFactura <${process.env.RESEND_FROM_EMAIL!}>`,
     to: user.email,
     subject: "Bienvenido a VozFactura 🎤",
     html: `
