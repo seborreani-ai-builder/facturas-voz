@@ -186,3 +186,38 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* Button press feedback — subtle bounce back */
+@keyframes btn-press {
+  0% { transform: scale(0.97) translateY(1px); }
+  50% { transform: scale(1.01) translateY(-1px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* Gradient buttons: animated background shift on hover */
+[class*="bg-gradient"]:hover {
+  background-size: 120% 120%;
+}
+
+[class*="bg-gradient"] {
+  background-size: 100% 100%;
+  transition: all 0.3s ease-out, background-size 0.4s ease-out;
+}
+
+/* Smooth active state for all interactive elements */
+button:active:not(:disabled),
+a[role="button"]:active {
+  transition-duration: 75ms;
+}
+
+/* Card hover lift */
+.hover-lift {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -6px rgba(0, 0, 0, 0.05);
+}
+.hover-lift:active {
+  transform: translateY(0);
+}
