@@ -27,28 +27,57 @@ export default function ResetPasswordPage() {
 
   useEffect(() => {
     const supabase = createClient();
+    let resolved = false;
 
-    // Listen for PASSWORD_RECOVERY event — Supabase client auto-detects
-    // the hash fragment (#access_token=...&type=recovery) and fires this event
+    function markReady() {
+      if (!resolved) {
+        resolved = true;
+        setReady(true);
+      }
+    }
+
+    function markError() {
+      if (!resolved) {
+        resolved = true;
+        setError(true);
+      }
+    }
+
+    // Method 1: Listen for PASSWORD_RECOVERY event (implicit flow with hash)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setReady(true);
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+        markReady();
       }
     });
 
-    // Fallback: if the event already fired before listener was set up,
-    // or if user already has a session from /auth/callback
-    const timer = setTimeout(() => {
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        if (user) {
-          setReady(true);
+    // Method 2: Check for ?code= param (PKCE flow)
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error: err }) => {
+        if (err) {
+          console.error("Code exchange failed:", err.message);
+          // Don't mark error yet, other methods might work
         } else {
-          setError(true);
+          markReady();
         }
       });
-    }, 2000);
+    }
+
+    // Method 3: Check if hash fragment has tokens (Supabase auto-detects)
+    // Give it time to process, then check session as fallback
+    const timer = setTimeout(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          markReady();
+        } else {
+          markError();
+        }
+      });
+    }, 3000);
 
     return () => {
       subscription.unsubscribe();

@@ -36,7 +36,13 @@ export async function GET(request: Request) {
 
       return NextResponse.redirect(`${origin}${next}`);
     }
+
+    // Debug: pass error details so we can diagnose
+    const errorMsg = encodeURIComponent(error.message);
+    return NextResponse.redirect(
+      `${origin}/login?error=auth&message=${errorMsg}`
+    );
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth`);
+  return NextResponse.redirect(`${origin}/login?error=no_code`);
 }
