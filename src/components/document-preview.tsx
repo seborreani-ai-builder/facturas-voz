@@ -184,7 +184,29 @@ export function DocumentPreview({
 
       {/* Client info */}
       <div className="space-y-4">
-        <h3 className="font-semibold">Datos del cliente</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold">Datos del cliente</h3>
+          {clients.length > 0 && (
+            <select
+              className="text-sm text-primary bg-transparent border-none cursor-pointer outline-none font-medium"
+              value=""
+              onChange={(e) => {
+                const client = clients.find((c) => c.id === e.target.value);
+                if (client) {
+                  setClientName(client.name);
+                  setClientEmail(client.email || "");
+                  setClientNif(client.nif || "");
+                  setClientAddress(client.address || "");
+                }
+              }}
+            >
+              <option value="" disabled>Cliente guardado...</option>
+              {clients.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label htmlFor="client_name" className="text-sm">
@@ -197,7 +219,6 @@ export function DocumentPreview({
               value={clientName}
               onChange={(e) => {
                 setClientName(e.target.value);
-                // Auto-fill from saved client
                 const match = clients.find(
                   (c) => c.name.toLowerCase() === e.target.value.toLowerCase()
                 );
