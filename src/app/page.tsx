@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Mic, FileText, Send, Zap, Shield, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LandingDemo } from "@/components/landing-demo";
 
 export default function Home() {
   return (
@@ -114,8 +115,26 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Live Demo */}
+        <section className="py-20 sm:py-28 bg-white">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-12">
+              <p className="text-sm font-semibold text-blue-600 tracking-wide uppercase mb-3">
+                Mira cómo funciona
+              </p>
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                De tu voz a una factura en segundos
+              </h2>
+              <p className="text-gray-500 mt-3 max-w-lg mx-auto">
+                Graba, revisa y envía. Sin formularios, sin complicaciones.
+              </p>
+            </div>
+            <LandingDemo />
+          </div>
+        </section>
+
         {/* Features - How it works */}
-        <section className="py-24 sm:py-32 bg-white">
+        <section className="py-24 sm:py-32 bg-gray-50">
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-16">
               <p className="text-sm font-semibold text-blue-600 tracking-wide uppercase mb-3">
