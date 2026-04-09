@@ -204,6 +204,16 @@
   transition: all 0.3s ease-out, background-size 0.4s ease-out;
 }
 
+/* Cursor pointer on all interactive elements */
+button:not(:disabled),
+[role="button"]:not(:disabled),
+a[href],
+select,
+summary,
+[tabindex]:not([tabindex="-1"]) {
+  cursor: pointer;
+}
+
 /* Smooth active state for all interactive elements */
 button:active:not(:disabled),
 a[role="button"]:active {
