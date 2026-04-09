@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Client } from "@/types";
@@ -92,6 +92,8 @@ export function DocumentPreview({
   const [notes, setNotes] = useState(initialData.notes || "");
   const [validUntil, setValidUntil] = useState(initialValidUntil || "");
   const [clients, setClients] = useState<Client[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const nameInputRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -208,34 +210,57 @@ export function DocumentPreview({
           )}
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
+          <div className="space-y-1 relative" ref={nameInputRef}>
             <Label htmlFor="client_name" className="text-sm">
               Nombre
             </Label>
             <Input
               id="client_name"
-              list="saved-clients"
               placeholder="Nombre del cliente"
               value={clientName}
+              autoComplete="off"
               onChange={(e) => {
                 setClientName(e.target.value);
-                const match = clients.find(
-                  (c) => c.name.toLowerCase() === e.target.value.toLowerCase()
-                );
-                if (match) {
-                  setClientEmail(match.email || "");
-                  setClientNif(match.nif || "");
-                  setClientAddress(match.address || "");
-                }
+                setShowSuggestions(e.target.value.length > 0 && clients.length > 0);
+              }}
+              onFocus={() => {
+                if (clients.length > 0) setShowSuggestions(true);
+              }}
+              onBlur={() => {
+                // Delay to allow click on suggestion
+                setTimeout(() => setShowSuggestions(false), 200);
               }}
             />
-            {clients.length > 0 && (
-              <datalist id="saved-clients">
-                {clients.map((c) => (
-                  <option key={c.id} value={c.name} />
-                ))}
-              </datalist>
-            )}
+            {showSuggestions && (() => {
+              const filtered = clients.filter((c) =>
+                c.name.toLowerCase().includes(clientName.toLowerCase())
+              );
+              if (filtered.length === 0) return null;
+              return (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                  {filtered.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setClientName(c.name);
+                        setClientEmail(c.email || "");
+                        setClientNif(c.nif || "");
+                        setClientAddress(c.address || "");
+                        setShowSuggestions(false);
+                      }}
+                    >
+                      <span className="font-medium">{c.name}</span>
+                      {c.email && (
+                        <span className="text-xs text-muted-foreground ml-2">{c.email}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
           <div className="space-y-1">
             <Label htmlFor="client_email" className="text-sm">
