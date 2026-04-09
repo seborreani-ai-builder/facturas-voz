@@ -168,28 +168,18 @@ export default function DashboardPage() {
             />
           </div>
           <div className="flex gap-2">
-            <Select value={statusFilter === "all" ? null : statusFilter} onValueChange={(v: string | null) => setStatusFilter(v ?? "all")}>
-              <SelectTrigger className="w-[140px] h-9">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="draft">Pendiente</SelectItem>
-                <SelectItem value="sent">Enviado</SelectItem>
-                <SelectItem value="accepted">Aceptado</SelectItem>
-                <SelectItem value="paid">Pagado</SelectItem>
-                <SelectItem value="rejected">Rechazado</SelectItem>
-              </SelectContent>
-            </Select>
-            {statusFilter !== "all" && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 text-xs text-muted-foreground"
-                onClick={() => setStatusFilter("all")}
-              >
-                Limpiar
-              </Button>
-            )}
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-9 rounded-lg border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="all">Todos</option>
+              <option value="draft">Pendiente</option>
+              <option value="sent">Enviado</option>
+              <option value="accepted">Aceptado</option>
+              <option value="paid">Pagado</option>
+              <option value="rejected">Rechazado</option>
+            </select>
             <Button
               variant="outline"
               size="sm"
