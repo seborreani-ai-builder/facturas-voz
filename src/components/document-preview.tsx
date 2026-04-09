@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, UserCheck, UserPlus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { normalize, findClientMatch } from "@/lib/utils";
 import type { Client } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,8 +94,11 @@ export function DocumentPreview({
   const [validUntil, setValidUntil] = useState(initialValidUntil || "");
   const [clients, setClients] = useState<Client[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [matchedClient, setMatchedClient] = useState<Client | null>(null);
+  const [matchDismissed, setMatchDismissed] = useState(false);
   const nameInputRef = useRef<HTMLDivElement>(null);
 
+  // Load saved clients
   useEffect(() => {
     const supabase = createClient();
     supabase
@@ -102,23 +106,33 @@ export function DocumentPreview({
       .select("*")
       .order("name")
       .then(({ data }) => {
-        if (data) setClients(data);
+        if (data) {
+          setClients(data);
+          // Auto-match if we have an initial client name (from AI extraction)
+          if (clientName && data.length > 0) {
+            const match = findClientMatch(clientName, data);
+            if (match) {
+              setMatchedClient(match);
+            }
+          }
+        }
       });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleClientSelect = useCallback(
-    (clientId: string) => {
-      if (clientId === "__none__") return;
-      const client = clients.find((c) => c.id === clientId);
-      if (client) {
-        setClientName(client.name);
-        setClientEmail(client.email || "");
-        setClientNif(client.nif || "");
-        setClientAddress(client.address || "");
-      }
-    },
-    [clients]
-  );
+  function applyClientMatch(client: Client) {
+    setClientName(client.name);
+    setClientEmail(client.email || clientEmail || "");
+    setClientNif(client.nif || clientNif || "");
+    setClientAddress(client.address || clientAddress || "");
+    setMatchedClient(null);
+    setMatchDismissed(true);
+  }
+
+  function dismissMatch() {
+    setMatchedClient(null);
+    setMatchDismissed(true);
+  }
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.quantity * item.unit_price,
@@ -186,6 +200,38 @@ export function DocumentPreview({
 
       {/* Client info */}
       <div className="space-y-4">
+        {/* Match banner — shown when AI extracted a name that matches a saved client */}
+        {matchedClient && !matchDismissed && (
+          <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <UserCheck className="h-5 w-5 text-blue-600 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-blue-900">
+                Cliente encontrado: {matchedClient.name}
+              </p>
+              {matchedClient.email && (
+                <p className="text-xs text-blue-600 truncate">{matchedClient.email}</p>
+              )}
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Button
+                size="sm"
+                className="!h-8 text-xs"
+                onClick={() => applyClientMatch(matchedClient)}
+              >
+                Usar datos
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="!h-8 text-xs"
+                onClick={dismissMatch}
+              >
+                Nuevo
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <h3 className="font-semibold">Datos del cliente</h3>
           {clients.length > 0 && (
@@ -194,12 +240,7 @@ export function DocumentPreview({
               value=""
               onChange={(e) => {
                 const client = clients.find((c) => c.id === e.target.value);
-                if (client) {
-                  setClientName(client.name);
-                  setClientEmail(client.email || "");
-                  setClientNif(client.nif || "");
-                  setClientAddress(client.address || "");
-                }
+                if (client) applyClientMatch(client);
               }}
             >
               <option value="" disabled>Cliente guardado...</option>
@@ -222,18 +263,25 @@ export function DocumentPreview({
               onChange={(e) => {
                 setClientName(e.target.value);
                 setShowSuggestions(e.target.value.length > 0 && clients.length > 0);
+                // Check for match as user types
+                if (!matchDismissed && e.target.value.length > 2) {
+                  const match = findClientMatch(e.target.value, clients);
+                  setMatchedClient(match ?? null);
+                } else {
+                  setMatchedClient(null);
+                }
               }}
               onFocus={() => {
                 if (clients.length > 0) setShowSuggestions(true);
               }}
               onBlur={() => {
-                // Delay to allow click on suggestion
                 setTimeout(() => setShowSuggestions(false), 200);
               }}
             />
             {showSuggestions && (() => {
+              const q = normalize(clientName);
               const filtered = clients.filter((c) =>
-                c.name.toLowerCase().includes(clientName.toLowerCase())
+                normalize(c.name).includes(q) || q.includes(normalize(c.name))
               );
               if (filtered.length === 0) return null;
               return (
@@ -242,13 +290,10 @@ export function DocumentPreview({
                     <button
                       key={c.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
+                      className="w-full text-left px-3 py-2.5 text-sm hover:bg-accent transition-colors"
                       onMouseDown={(e) => {
                         e.preventDefault();
-                        setClientName(c.name);
-                        setClientEmail(c.email || "");
-                        setClientNif(c.nif || "");
-                        setClientAddress(c.address || "");
+                        applyClientMatch(c);
                         setShowSuggestions(false);
                       }}
                     >

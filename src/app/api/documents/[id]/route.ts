@@ -119,6 +119,20 @@ export async function PATCH(
       }
     }
 
+    // Save/update client for future use
+    if (documentData.client_name) {
+      await supabase.from("clients").upsert(
+        {
+          user_id: user.id,
+          name: documentData.client_name,
+          email: documentData.client_email || null,
+          nif: documentData.client_nif || null,
+          address: documentData.client_address || null,
+        },
+        { onConflict: "user_id,name" }
+      );
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Update document error:", error);
