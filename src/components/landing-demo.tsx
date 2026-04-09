@@ -16,7 +16,7 @@ const DEMO_SUBTOTAL = 125.0;
 const DEMO_IVA = 26.25;
 const DEMO_TOTAL = 151.25;
 
-type DemoStep = "idle" | "recording" | "transcribing" | "extracting" | "invoice" | "sent";
+type DemoStep = "idle" | "recording" | "extracting" | "invoice" | "sent";
 
 export function LandingDemo() {
   const [step, setStep] = useState<DemoStep>("idle");
@@ -39,39 +39,41 @@ export function LandingDemo() {
     return () => clearTimeout(timeout);
   }, [step]);
 
-  // Recording timer
+  // Recording: timer + typewriter together
   useEffect(() => {
     if (step !== "recording") return;
-    const interval = setInterval(() => {
+
+    const timerInterval = setInterval(() => {
       setTimer((prev) => prev + 1);
     }, 1000);
-    return () => clearInterval(interval);
-  }, [step]);
 
-  // Typewriter runs DURING recording
-  useEffect(() => {
-    if (step !== "recording") return;
+    // Start typewriter after short delay
+    let typewriterInterval: ReturnType<typeof setInterval>;
     const startDelay = setTimeout(() => {
-      const interval = setInterval(() => {
+      typewriterInterval = setInterval(() => {
         setVisibleChars((prev) => {
           if (prev >= DEMO_TEXT.length) {
-            setTimeout(() => setStep("extracting"), 800);
+            clearInterval(typewriterInterval);
+            // Move to extracting (inline, same screen)
+            setTimeout(() => setStep("extracting"), 600);
             return prev;
           }
           return prev + 1;
         });
       }, 45);
-      return () => clearInterval(interval);
     }, 800);
-    return () => clearTimeout(startDelay);
+
+    return () => {
+      clearInterval(timerInterval);
+      clearTimeout(startDelay);
+      if (typewriterInterval) clearInterval(typewriterInterval);
+    };
   }, [step]);
 
-  // Extracting → invoice
+  // Extracting → invoice (short pause then show invoice)
   useEffect(() => {
     if (step !== "extracting") return;
-    const timeout = setTimeout(() => {
-      setStep("invoice");
-    }, 1200);
+    const timeout = setTimeout(() => setStep("invoice"), 1500);
     return () => clearTimeout(timeout);
   }, [step]);
 
@@ -129,40 +131,68 @@ export function LandingDemo() {
             </div>
           )}
 
-          {/* Step: Recording + live transcription */}
-          {step === "recording" && (
+          {/* Step: Recording + live transcription + extracting (all inline) */}
+          {(step === "recording" || step === "extracting") && (
             <div className="flex-1 flex flex-col gap-3 animate-fade-up">
               {/* Mic + status */}
               <div className="flex items-center gap-3">
                 <div className="relative shrink-0">
-                  <div className="absolute inset-0 w-10 h-10 rounded-full bg-orange-400/20 animate-ping" />
-                  <div className="relative w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center shadow-md shadow-orange-500/30">
-                    <Mic className="w-4 h-4 text-white" />
+                  {step === "recording" && (
+                    <div className="absolute inset-0 w-10 h-10 rounded-full bg-orange-400/20 animate-ping" />
+                  )}
+                  <div className={`relative w-10 h-10 rounded-full flex items-center justify-center shadow-md transition-colors duration-300 ${
+                    step === "recording"
+                      ? "bg-orange-500 shadow-orange-500/30"
+                      : "bg-blue-600 shadow-blue-500/30"
+                  }`}>
+                    {step === "recording" ? (
+                      <Mic className="w-4 h-4 text-white" />
+                    ) : (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    )}
                   </div>
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
-                    <span className="text-sm font-medium text-orange-600">
-                      Grabando... {formatTime(timer)}
-                    </span>
-                  </div>
-                  {/* Mini waveform */}
-                  <div className="flex items-end gap-px h-4 mt-1">
-                    {Array.from({ length: 30 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-0.5 bg-orange-300 rounded-full"
-                        style={{
-                          height: `${3 + Math.sin((Date.now() / 200 + i) * 0.8) * 6 + Math.random() * 4}px`,
-                        }}
-                      />
-                    ))}
-                  </div>
+                  {step === "recording" ? (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+                        <span className="text-sm font-medium text-orange-600">
+                          Grabando... {formatTime(timer)}
+                        </span>
+                      </div>
+                      <div className="flex items-end gap-px h-4 mt-1">
+                        {Array.from({ length: 30 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className="w-0.5 bg-orange-300 rounded-full"
+                            style={{
+                              height: `${3 + Math.sin((Date.now() / 200 + i) * 0.8) * 6 + Math.random() * 4}px`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-blue-600">
+                        Extrayendo datos con IA...
+                      </span>
+                      <div className="flex gap-0.5">
+                        {[0, 1, 2].map((i) => (
+                          <div
+                            key={i}
+                            className="w-1 h-1 bg-blue-400 rounded-full animate-bounce"
+                            style={{ animationDelay: `${i * 0.15}s` }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Live transcript appearing below */}
+              {/* Live transcript */}
               {visibleChars > 0 && (
                 <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-700 leading-relaxed">
                   {DEMO_TEXT.slice(0, visibleChars)}
@@ -172,29 +202,12 @@ export function LandingDemo() {
                 </div>
               )}
 
-              {visibleChars >= DEMO_TEXT.length && (
+              {visibleChars >= DEMO_TEXT.length && step === "recording" && (
                 <div className="flex items-center gap-1.5 text-xs text-green-600 animate-fade-up">
                   <Check className="w-3.5 h-3.5" />
                   Audio procesado
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Step: Extracting */}
-          {step === "extracting" && (
-            <div className="flex-1 flex flex-col items-center justify-center gap-3 animate-fade-up">
-              <div className="w-10 h-10 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
-              <p className="text-sm font-medium text-gray-600">Extrayendo datos con IA...</p>
-              <div className="flex gap-1">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce"
-                    style={{ animationDelay: `${i * 0.15}s` }}
-                  />
-                ))}
-              </div>
             </div>
           )}
 

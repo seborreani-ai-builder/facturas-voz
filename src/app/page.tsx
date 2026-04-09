@@ -2,8 +2,12 @@ import Link from "next/link";
 import { Mic, FileText, Send, Zap, Shield, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LandingDemo } from "@/components/landing-demo";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const isLoggedIn = !!user;
   return (
     <div className="flex flex-col min-h-screen overflow-hidden">
       {/* Header */}
@@ -18,16 +22,26 @@ export default function Home() {
             </span>
           </div>
           <div className="flex gap-3">
-            <Link href="/login">
-              <Button variant="ghost" className="text-gray-600 hover:text-gray-900">
-                Iniciar sesión
-              </Button>
-            </Link>
-            <Link href="/register">
-              <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20">
-                Registrarse
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <Link href="/dashboard">
+                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20">
+                  Ir al panel
+                </Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" className="text-gray-600 hover:text-gray-900">
+                    Iniciar sesión
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20">
+                    Registrarse
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
