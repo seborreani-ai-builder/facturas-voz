@@ -43,7 +43,8 @@ export default function ResetPasswordPage() {
       }
     }
 
-    // Method 1: Listen for PASSWORD_RECOVERY event (implicit flow with hash)
+    // The Supabase browser client auto-detects #access_token in the hash
+    // and fires PASSWORD_RECOVERY for recovery flows
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
@@ -52,23 +53,7 @@ export default function ResetPasswordPage() {
       }
     });
 
-    // Method 2: Check for ?code= param (PKCE flow)
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error: err }) => {
-        if (err) {
-          console.error("Code exchange failed:", err.message);
-          // Don't mark error yet, other methods might work
-        } else {
-          markReady();
-        }
-      });
-    }
-
-    // Method 3: Check if hash fragment has tokens (Supabase auto-detects)
-    // Give it time to process, then check session as fallback
+    // Fallback: check if session was already established
     const timer = setTimeout(() => {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
