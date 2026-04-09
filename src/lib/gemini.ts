@@ -47,8 +47,22 @@ export async function extractInvoiceFromAudio(
   // flash-lite doesn't support audio — use full flash for audio input
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
+  const audioPrompt = `El siguiente audio está en ESPAÑOL de España. Es un autónomo (electricista, fontanero, pintor, cerrajero, albañil, etc.) dictando los datos de una factura o presupuesto por voz.
+
+Contexto importante para la transcripción:
+- Habla español de España (no latinoamericano)
+- Puede usar expresiones coloquiales: "le cobro", "le he hecho", "me debe", "son X euros"
+- Los números pueden estar dichos de forma natural: "ciento veinte", "mil quinientos", etc.
+- Los nombres propios serán españoles: García, Fernández, López, etc.
+- Las direcciones siguen el formato español: calle, avenida, número, piso
+- Puede mencionar IVA, NIF, CIF
+
+Escucha el audio, transcribe mentalmente, y luego extrae los datos de factura.
+
+${EXTRACTION_PROMPT}`;
+
   const result = await model.generateContent([
-    EXTRACTION_PROMPT,
+    audioPrompt,
     {
       inlineData: {
         mimeType,
