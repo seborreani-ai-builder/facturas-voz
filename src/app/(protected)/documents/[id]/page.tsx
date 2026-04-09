@@ -292,44 +292,40 @@ export default function DocumentDetailPage() {
 
       {/* Action toolbar */}
       <Card className="border-0 shadow-sm">
-        <CardContent className="p-3">
-          <div className="flex flex-wrap items-center gap-2">
+        <CardContent className="p-3 space-y-2">
+          {/* Primary actions */}
+          <div className="flex items-center gap-1">
             <Link href={`/documents/${id}/edit`}>
               <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
                 <Pencil className="h-4 w-4" /> Editar
               </Button>
             </Link>
-
-            <Separator orientation="vertical" className="h-6" />
-
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground" onClick={handleDownload}>
               <Download className="h-4 w-4" /> PDF
             </Button>
-
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground" onClick={handleShare}>
               <Share2 className="h-4 w-4" /> Compartir
             </Button>
-
             {doc.client_email && doc.status !== "paid" && (
-              <>
-                <Separator orientation="vertical" className="h-6" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950"
-                  onClick={handleSend}
-                  disabled={actionLoading === "send"}
-                >
-                  {actionLoading === "send" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                  {doc.status === "sent" ? "Reenviar" : "Enviar"}
-                </Button>
-              </>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950"
+                onClick={handleSend}
+                disabled={actionLoading === "send"}
+              >
+                {actionLoading === "send" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                {doc.status === "sent" ? "Reenviar" : "Enviar"}
+              </Button>
             )}
+          </div>
 
+          {/* Status actions */}
+          <div className="flex items-center gap-2 border-t border-border/60 pt-2">
             {doc.document_type === "quote" && doc.status !== "rejected" && (
               <Button
                 variant="ghost"
@@ -346,8 +342,6 @@ export default function DocumentDetailPage() {
                 Convertir a factura
               </Button>
             )}
-
-            <div className="flex-1" />
 
             {doc.status !== "paid" && doc.status !== "rejected" &&
               doc.document_type === "invoice" && (
@@ -382,6 +376,8 @@ export default function DocumentDetailPage() {
                 Aceptado
               </Button>
             )}
+
+            <div className="flex-1" />
 
             <Button
               variant="ghost"

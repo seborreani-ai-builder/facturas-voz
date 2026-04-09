@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Mic, Square, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Mic, Square } from "lucide-react";
 
 interface AudioRecorderProps {
   onRecordingComplete: (audioBlob: Blob) => void;
@@ -109,8 +108,8 @@ export function AudioRecorder({
       )}
 
       {!isRecording && (
-        <p className="text-sm text-gray-500">
-          Pulsa para grabar lo que has hecho y cuánto cobras
+        <p className="text-sm text-muted-foreground">
+          Pulsa para grabar
         </p>
       )}
     </div>

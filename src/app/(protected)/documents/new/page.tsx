@@ -5,10 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Loader2,
   ArrowLeft,
-  Mic,
   PenLine,
   Sparkles,
-  CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -153,14 +151,6 @@ function NewDocumentContent() {
     }
   }
 
-  const stepLabels = [
-    { key: "input", label: "Entrada", icon: Mic },
-    { key: "processing", label: "Procesando", icon: Sparkles },
-    { key: "preview", label: "Confirmar", icon: CheckCircle2 },
-  ] as const;
-
-  const stepIndex = stepLabels.findIndex((s) => s.key === step);
-
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
@@ -179,81 +169,18 @@ function NewDocumentContent() {
             {docType === "invoice" ? "Nueva Factura" : "Nuevo Presupuesto"}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Dicta o escribe los detalles de tu documento
+            Pulsa el micrófono y describe tu trabajo
           </p>
         </div>
-      </div>
-
-      {/* Step Indicator */}
-      <div className="flex items-center justify-center gap-3 mb-6">
-        {stepLabels.map((s, i) => {
-          const Icon = s.icon;
-          const isActive = i === stepIndex;
-          const isCompleted = i < stepIndex;
-          return (
-            <div key={s.key} className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <div
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-medium transition-all duration-300 ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/25 scale-110"
-                      : isCompleted
-                        ? "bg-primary/15 text-primary"
-                        : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                </div>
-                <span
-                  className={`text-xs font-medium transition-colors ${
-                    isActive
-                      ? "text-foreground"
-                      : isCompleted
-                        ? "text-primary"
-                        : "text-muted-foreground"
-                  }`}
-                >
-                  {s.label}
-                </span>
-              </div>
-              {i < stepLabels.length - 1 && (
-                <div
-                  className={`h-px w-8 transition-colors duration-300 ${
-                    isCompleted ? "bg-primary/40" : "bg-border"
-                  }`}
-                />
-              )}
-            </div>
-          );
-        })}
       </div>
 
       {/* Step 1: Input */}
       {step === "input" && (
         <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
           {/* Audio Section */}
-          <Card className="overflow-hidden border-0 shadow-md">
-            <div className="bg-gradient-to-br from-primary/5 via-primary/[0.02] to-transparent">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <Mic className="h-3.5 w-3.5" />
-                  </div>
-                  <CardTitle className="text-base font-semibold">
-                    Dictar por voz
-                  </CardTitle>
-                </div>
-                <p className="text-sm text-muted-foreground pl-8">
-                  Pulsa el micrófono y describe el trabajo realizado
-                </p>
-              </CardHeader>
-              <CardContent className="pt-0 pb-6">
-                <div className="flex items-center justify-center rounded-xl bg-gradient-to-b from-muted/50 to-muted/30 border border-border/50 p-8">
-                  <AudioRecorder onRecordingComplete={processAudio} />
-                </div>
-              </CardContent>
-            </div>
-          </Card>
+          <div className="flex items-center justify-center py-8">
+            <AudioRecorder onRecordingComplete={processAudio} />
+          </div>
 
           {/* Divider */}
           <div className="relative py-1">
@@ -304,32 +231,17 @@ function NewDocumentContent() {
 
       {/* Step 2: Processing */}
       {step === "processing" && (
-        <Card className="overflow-hidden border-0 shadow-md animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <CardContent className="flex flex-col items-center justify-center py-20 px-6">
-            {/* Animated rings */}
-            <div className="relative mb-6">
-              <div className="absolute inset-0 h-16 w-16 rounded-full bg-primary/10 animate-ping" />
-              <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/20">
-                <Sparkles className="h-7 w-7 animate-pulse" />
-              </div>
+        <div className="flex flex-col items-center justify-center py-20 animate-in fade-in duration-300">
+          <div className="relative mb-6">
+            <div className="absolute inset-0 h-16 w-16 rounded-full bg-primary/10 animate-ping" />
+            <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/20">
+              <Sparkles className="h-7 w-7 animate-pulse" />
             </div>
-
-            <p className="text-lg font-semibold text-foreground">
-              Extrayendo datos...
-            </p>
-            <p className="text-sm text-muted-foreground mt-1.5 text-center max-w-xs">
-              La IA esta analizando tu mensaje para generar el documento
-            </p>
-
-            {/* Skeleton preview */}
-            <div className="w-full max-w-sm mt-8 space-y-3">
-              <div className="h-3 bg-muted rounded-full animate-pulse" />
-              <div className="h-3 bg-muted rounded-full w-4/5 animate-pulse delay-75" />
-              <div className="h-3 bg-muted rounded-full w-3/5 animate-pulse delay-150" />
-              <div className="h-8 bg-muted rounded-lg w-2/5 animate-pulse delay-200 mt-4" />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <p className="text-base font-medium text-foreground">
+            Extrayendo datos...
+          </p>
+        </div>
       )}
 
       {/* Step 3: Preview & Edit */}
@@ -337,17 +249,9 @@ function NewDocumentContent() {
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
           <Card className="overflow-hidden border-0 shadow-md">
             <CardHeader className="border-b border-border/60 bg-muted/30">
-              <div className="flex items-center gap-2">
-                <div className="flex h-6 w-6 items-center justify-center rounded-md bg-green-500/10 text-green-600">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                </div>
-                <CardTitle className="text-base font-semibold">
-                  Revisa y confirma
-                </CardTitle>
-              </div>
-              <p className="text-sm text-muted-foreground pl-8">
-                Comprueba que los datos extraidos son correctos
-              </p>
+              <CardTitle className="text-base font-semibold">
+                Revisa y confirma
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-5">
               <DocumentPreview

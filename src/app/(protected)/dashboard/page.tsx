@@ -140,13 +140,13 @@ export default function DashboardPage() {
         </div>
         <div className="flex gap-2">
           <Link href="/documents/new?type=quote">
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" className="gap-2">
               <Plus className="h-4 w-4" />
               Presupuesto
             </Button>
           </Link>
           <Link href="/documents/new?type=invoice">
-            <Button size="sm" className="gap-2">
+            <Button className="gap-2">
               <Plus className="h-4 w-4" />
               Factura
             </Button>
