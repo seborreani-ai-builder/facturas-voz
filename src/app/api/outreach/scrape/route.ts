@@ -1,35 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// Extract email from a website HTML (best effort)
-async function scrapeEmailFromWebsite(url: string): Promise<string | null> {
+const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+
+const FALSE_POSITIVE_PATTERNS = [
+  "example.com", "sentry.io", "wixpress", "googleapis", "wordpress",
+  "schema.org", "w3.org", "gravatar", "cloudflare", "google.com",
+  ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".css", ".js",
+];
+
+// Subpages most likely to contain contact emails
+const CONTACT_PATHS = [
+  "/contacto", "/contact", "/contacta", "/about",
+  "/sobre-nosotros", "/quienes-somos", "/empresa",
+];
+
+function extractEmailsFromHtml(html: string): string[] {
+  const emails = html.match(EMAIL_REGEX) || [];
+  return [...new Set(emails)].filter(
+    (e) => !FALSE_POSITIVE_PATTERNS.some((p) => e.toLowerCase().includes(p))
+  );
+}
+
+async function fetchPage(url: string): Promise<string | null> {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     const res = await fetch(url, {
       signal: controller.signal,
-      headers: { "User-Agent": "Mozilla/5.0" },
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; VozFactura/1.0)" },
+      redirect: "follow",
     });
     clearTimeout(timeout);
-    const html = await res.text();
-    // Find emails in the HTML
-    const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-    const emails = html.match(emailRegex);
-    if (!emails) return null;
-    // Filter out common false positives
-    const filtered = emails.filter(
-      (e) =>
-        !e.includes("example.com") &&
-        !e.includes("sentry.io") &&
-        !e.includes("wixpress") &&
-        !e.includes("googleapis") &&
-        !e.endsWith(".png") &&
-        !e.endsWith(".jpg")
-    );
-    return filtered[0] || null;
+    if (!res.ok) return null;
+    return await res.text();
   } catch {
     return null;
   }
+}
+
+// Extract email from website: tries homepage + contact/about subpages
+async function scrapeEmailFromWebsite(url: string): Promise<string | null> {
+  // Normalize base URL
+  const base = url.replace(/\/+$/, "");
+
+  // Try homepage first
+  const homeHtml = await fetchPage(base);
+  if (homeHtml) {
+    const emails = extractEmailsFromHtml(homeHtml);
+    if (emails.length > 0) return emails[0];
+  }
+
+  // Try contact/about subpages in parallel
+  const subpageResults = await Promise.all(
+    CONTACT_PATHS.map(async (path) => {
+      const html = await fetchPage(base + path);
+      if (!html) return null;
+      const emails = extractEmailsFromHtml(html);
+      return emails.length > 0 ? emails[0] : null;
+    })
+  );
+
+  return subpageResults.find((e) => e != null) || null;
 }
 
 export async function POST(request: NextRequest) {
