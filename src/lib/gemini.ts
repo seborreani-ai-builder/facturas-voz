@@ -83,20 +83,35 @@ export async function generateOutreachEmail(
 ): Promise<string> {
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
-  const prompt = `Genera un email de outreach corto y personalizado en español para un autónomo.
+  const prompt = `Genera un email de outreach personalizado en español para un autónomo.
 
 Datos del destinatario:
 - Negocio: ${businessName}
 - Categoría: ${category}
 - Provincia: ${province}
 
-El email debe:
-- Ser breve (máximo 150 palabras)
-- Tono cercano pero profesional, usar "tú"
-- Mencionar que tenemos una app que les permite crear facturas y presupuestos hablando al móvil
-- Destacar que es gratis para empezar y que no hace falta saber de informática
-- Incluir una llamada a la acción clara
-- NO incluir subject/asunto, solo el cuerpo del email
+ESTILO y TONO:
+- Cercano, usa "tú", empático con su día a día
+- Entiende que está todo el día fuera (en la furgoneta, en casa del cliente, en la obra)
+- Llega cansado y lo último que quiere es papeleo
+- NO uses emojis
+- NO uses signos de exclamación innecesarios
+- Usa tildes correctas
+
+PUNTOS CLAVE a incluir:
+- Miles de autónomos ya lo usan
+- Hablas al móvil y en 10 segundos tienes la factura/presupuesto en PDF
+- Desde donde sea: furgoneta, obra, casa del cliente
+- Sin formularios, sin aprender nada
+- Es GRATIS
+- URL: factura.ai-implementer.com
+
+ESTRUCTURA:
+- Máximo 120 palabras
+- Empieza con "Hola,"
+- Termina con "Un saludo, Equipo VozFactura"
+- Si puedes, personaliza algo por la categoría (${category}) — una referencia a su trabajo concreto
+- NO incluir asunto, solo el cuerpo del email
 
 Responde SOLO con el texto del email, sin comillas ni formato extra.`;
 

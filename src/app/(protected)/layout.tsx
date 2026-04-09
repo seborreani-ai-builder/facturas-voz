@@ -72,14 +72,24 @@ export default async function ProtectedLayout({
               </Button>
             </Link>
             {isAdmin && (
-              <Link href="/outreach">
-                <Button
-                  variant="ghost"
-                  className="gap-1.5 rounded-lg text-orange-500 hover:text-orange-600 hover:bg-orange-50 transition-colors !h-9 px-3"
-                >
-                  <span className="text-sm font-medium">Outreach</span>
-                </Button>
-              </Link>
+              <>
+                <Link href="/outreach">
+                  <Button
+                    variant="ghost"
+                    className="gap-1.5 rounded-lg text-orange-500 hover:text-orange-600 hover:bg-orange-50 transition-colors !h-9 px-3"
+                  >
+                    <span className="text-sm font-medium">Outreach</span>
+                  </Button>
+                </Link>
+                <Link href="/admin">
+                  <Button
+                    variant="ghost"
+                    className="gap-1.5 rounded-lg text-muted-foreground hover:text-foreground transition-colors !h-9 px-3"
+                  >
+                    <span className="text-sm font-medium">Stats</span>
+                  </Button>
+                </Link>
+              </>
             )}
 
             <div className="w-px h-5 bg-border mx-0.5" />
