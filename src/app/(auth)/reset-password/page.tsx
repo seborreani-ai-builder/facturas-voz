@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Mic } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
@@ -17,22 +18,46 @@ import {
 } from "@/components/ui/card";
 
 export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50/50">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
+  );
+}
+
+function ResetPasswordForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    // Supabase automatically picks up the code from the URL hash/params
-    // and establishes the session. We just need to wait for it.
+    const code = searchParams.get("code");
+    if (!code) {
+      setError(true);
+      return;
+    }
+
     const supabase = createClient();
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setReady(true);
-      }
-    });
-  }, []);
+    supabase.auth
+      .exchangeCodeForSession(code)
+      .then(({ error }) => {
+        if (error) {
+          setError(true);
+        } else {
+          setReady(true);
+        }
+      });
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -84,7 +109,19 @@ export default function ResetPasswordPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="px-8 pb-8 pt-4">
-          {!ready ? (
+          {error ? (
+            <div className="text-center py-8 space-y-4">
+              <p className="text-sm text-red-600">
+                El enlace ha expirado o no es válido. Solicita uno nuevo.
+              </p>
+              <Link
+                href="/forgot-password"
+                className="text-sm text-blue-600 font-semibold hover:text-blue-700 transition-colors"
+              >
+                Solicitar nuevo enlace
+              </Link>
+            </div>
+          ) : !ready ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
               <p className="text-sm text-gray-500">Verificando enlace...</p>
