@@ -43,8 +43,7 @@ export default function ResetPasswordPage() {
       }
     }
 
-    // The Supabase browser client auto-detects #access_token in the hash
-    // and fires PASSWORD_RECOVERY for recovery flows
+    // Listen for auth events (works for both implicit hash and PKCE)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
@@ -53,20 +52,30 @@ export default function ResetPasswordPage() {
       }
     });
 
-    // Fallback: check if session was already established
-    const timer = setTimeout(() => {
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) {
-          markReady();
-        } else {
-          markError();
-        }
-      });
-    }, 3000);
+    // PKCE flow: exchange ?code= param using the SAME browser client
+    // that stored the code_verifier when resetPasswordForEmail was called
+    const code = new URLSearchParams(window.location.search).get("code");
+    if (code) {
+      supabase.auth
+        .exchangeCodeForSession(code)
+        .then(({ error: err }) => {
+          if (err) {
+            console.error("exchangeCodeForSession error:", err.message);
+            markError();
+          } else {
+            markReady();
+          }
+        });
+    } else if (window.location.hash) {
+      // Implicit flow: hash contains tokens, Supabase client auto-detects
+      // onAuthStateChange will fire — just wait
+    } else {
+      // No code, no hash — invalid link
+      markError();
+    }
 
     return () => {
       subscription.unsubscribe();
-      clearTimeout(timer);
     };
   }, []);
 
