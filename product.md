@@ -36,12 +36,26 @@ Voice/chat-first invoicing for freelance tradespeople in Spain. No forms, no acc
 - Generate personalized outreach emails using AI
 - Track contacted leads and responses
 
+## Built in MVP
+- [x] Auth (email/password) + company profile setup
+- [x] Voice input → Gemini extracts invoice data (one step, no transcription)
+- [x] Text input alternative
+- [x] Invoice/Quote toggle
+- [x] Preview & edit with live totals
+- [x] PDF generation + download
+- [x] Email delivery (Resend)
+- [x] Share via Web Share API (WhatsApp, etc.)
+- [x] Document management (edit, delete, mark paid, convert quote→invoice)
+- [x] Repeat client autocomplete
+- [x] Outreach module (Google Maps scraping + AI email generation)
+- [x] PWA installable
+- [x] Modern responsive UI
+
 ## What's NOT in MVP
-- WhatsApp integration (Phase 2)
+- WhatsApp Business API integration (Phase 2)
 - Accounting reports or tax filing
 - Multi-user / team features
 - Payment gateway
-- Mobile native app (PWA-first)
 
 ## Business Model (Post-Validation)
 - **Freemium**: 5 invoices/month free, unlimited for €9.99/month
