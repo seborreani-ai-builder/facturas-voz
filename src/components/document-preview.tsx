@@ -407,16 +407,14 @@ export function DocumentPreview({
       <div className="flex flex-col sm:flex-row gap-3 pt-4 pb-2">
         <Button
           variant="outline"
-          size="lg"
-          className="flex-1 h-12 text-base font-medium"
+          className="flex-1 !h-12 text-base font-medium py-3 px-6"
           onClick={() => onSave(buildData("draft"))}
           disabled={saving}
         >
           {saving ? "Guardando..." : "Guardar"}
         </Button>
         <Button
-          size="lg"
-          className="flex-1 h-12 text-base font-medium"
+          className="flex-1 !h-12 text-base font-medium py-3 px-6"
           onClick={() => {
             if (!clientEmail) {
               onSave(buildData("draft"));

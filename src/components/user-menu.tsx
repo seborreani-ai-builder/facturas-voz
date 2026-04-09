@@ -21,9 +21,11 @@ export function UserMenu({ email, initials }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        render={
+          <button className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" />
+        }
       >
-        <Avatar size="default">
+        <Avatar>
           <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold cursor-pointer hover:bg-primary/20 transition-colors">
             {initials ? initials : <User className="h-4 w-4" />}
           </AvatarFallback>

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Mic, FileText, AlertTriangle } from "lucide-react";
+import { Mic, LayoutGrid, AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/user-menu";
@@ -46,48 +46,43 @@ export default async function ProtectedLayout({
     <div className="min-h-screen flex flex-col bg-muted/40">
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-lg shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           {/* Logo */}
           <Link
             href="/dashboard"
-            className="flex items-center gap-2.5 group"
+            className="flex items-center gap-2 group"
           >
             <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 text-primary-foreground shadow-sm transition-shadow group-hover:shadow-md">
               <Mic className="h-4 w-4" />
             </div>
-            <span className="text-lg font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <span className="text-base sm:text-lg font-bold tracking-tight">
               VozFactura
             </span>
           </Link>
 
           {/* Navigation */}
-          <nav className="flex items-center gap-0.5">
+          <nav className="flex items-center gap-1 sm:gap-2">
             <Link href="/dashboard">
               <Button
                 variant="ghost"
-                size="sm"
-                className="gap-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                className="gap-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors !h-9 px-3"
               >
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline text-sm font-medium">
-                  Documentos
-                </span>
+                <LayoutGrid className="h-4 w-4" />
+                <span className="text-sm font-medium">Panel</span>
               </Button>
             </Link>
             {isAdmin && (
               <Link href="/outreach">
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="gap-2 rounded-lg text-orange-500 hover:text-orange-600 hover:bg-orange-50 transition-colors"
+                  className="gap-1.5 rounded-lg text-orange-500 hover:text-orange-600 hover:bg-orange-50 transition-colors !h-9 px-3"
                 >
-                  <span className="hidden sm:inline text-sm font-medium">
-                    Outreach
-                  </span>
+                  <span className="text-sm font-medium">Outreach</span>
                 </Button>
               </Link>
             )}
-            <div className="w-px h-5 bg-border mx-1 hidden sm:block" />
+
+            <div className="w-px h-5 bg-border mx-0.5" />
 
             <UserMenu
               email={user.email || ""}
