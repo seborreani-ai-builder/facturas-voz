@@ -24,7 +24,7 @@ export default function PrivacidadPage() {
             <p>
               El responsable del tratamiento de tus datos es el titular de VozFactura,
               accesible en factura.ai-implementer.com. Para cualquier consulta sobre
-              privacidad puedes escribir a: <strong>privacidad@ai-implementer.com</strong>
+              privacidad puedes escribir a: <strong>sebas@ai-implementer.com</strong>
             </p>
           </section>
 
@@ -72,7 +72,7 @@ export default function PrivacidadPage() {
             <p>
               Tus datos se conservan mientras mantengas tu cuenta activa. Puedes solicitar
               la eliminación de tu cuenta y todos tus datos en cualquier momento escribiendo
-              a privacidad@ai-implementer.com.
+              a sebas@ai-implementer.com.
             </p>
           </section>
 
@@ -87,7 +87,7 @@ export default function PrivacidadPage() {
               <li>Portar tus datos a otro servicio.</li>
             </ul>
             <p className="mt-2">
-              Para ejercer estos derechos, escribe a privacidad@ai-implementer.com.
+              Para ejercer estos derechos, escribe a sebas@ai-implementer.com.
             </p>
           </section>
 
