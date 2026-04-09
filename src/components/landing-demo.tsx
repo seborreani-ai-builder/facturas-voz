@@ -43,30 +43,27 @@ export function LandingDemo() {
   useEffect(() => {
     if (step !== "recording") return;
     const interval = setInterval(() => {
-      setTimer((prev) => {
-        if (prev >= 4) {
-          setStep("transcribing");
-          return prev;
-        }
-        return prev + 1;
-      });
+      setTimer((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(interval);
   }, [step]);
 
-  // Transcription typewriter
+  // Typewriter runs DURING recording
   useEffect(() => {
-    if (step !== "transcribing") return;
-    const interval = setInterval(() => {
-      setVisibleChars((prev) => {
-        if (prev >= DEMO_TEXT.length) {
-          setTimeout(() => setStep("extracting"), 600);
-          return prev;
-        }
-        return prev + 2;
-      });
-    }, 30);
-    return () => clearInterval(interval);
+    if (step !== "recording") return;
+    const startDelay = setTimeout(() => {
+      const interval = setInterval(() => {
+        setVisibleChars((prev) => {
+          if (prev >= DEMO_TEXT.length) {
+            setTimeout(() => setStep("extracting"), 800);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 45);
+      return () => clearInterval(interval);
+    }, 800);
+    return () => clearTimeout(startDelay);
   }, [step]);
 
   // Extracting → invoice
@@ -132,54 +129,53 @@ export function LandingDemo() {
             </div>
           )}
 
-          {/* Step: Recording */}
+          {/* Step: Recording + live transcription */}
           {step === "recording" && (
-            <div className="flex-1 flex flex-col items-center justify-center gap-3 animate-fade-up">
-              <div className="relative">
-                <div className="absolute inset-0 w-16 h-16 rounded-full bg-orange-400/20 animate-ping" />
-                <div className="relative w-16 h-16 rounded-full bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
-                  <Square className="w-6 h-6 text-white" fill="white" />
+            <div className="flex-1 flex flex-col gap-3 animate-fade-up">
+              {/* Mic + status */}
+              <div className="flex items-center gap-3">
+                <div className="relative shrink-0">
+                  <div className="absolute inset-0 w-10 h-10 rounded-full bg-orange-400/20 animate-ping" />
+                  <div className="relative w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center shadow-md shadow-orange-500/30">
+                    <Mic className="w-4 h-4 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
+                    <span className="text-sm font-medium text-orange-600">
+                      Grabando... {formatTime(timer)}
+                    </span>
+                  </div>
+                  {/* Mini waveform */}
+                  <div className="flex items-end gap-px h-4 mt-1">
+                    {Array.from({ length: 30 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-0.5 bg-orange-300 rounded-full"
+                        style={{
+                          height: `${3 + Math.sin((Date.now() / 200 + i) * 0.8) * 6 + Math.random() * 4}px`,
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
-                <span className="text-sm font-medium text-orange-600">
-                  Grabando... {formatTime(timer)}
-                </span>
-              </div>
-              {/* Waveform bars */}
-              <div className="flex items-end gap-0.5 h-8">
-                {Array.from({ length: 24 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-1 bg-orange-400 rounded-full transition-all"
-                    style={{
-                      height: `${8 + Math.sin((Date.now() / 200 + i) * 0.8) * 12 + Math.random() * 8}px`,
-                      animationDuration: `${0.3 + Math.random() * 0.4}s`,
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
 
-          {/* Step: Transcribing */}
-          {step === "transcribing" && (
-            <div className="flex-1 flex flex-col gap-3 animate-fade-up">
-              <div className="flex items-center gap-2">
-                <Mic className="w-3.5 h-3.5 text-blue-600" />
-                <span className="text-xs font-medium text-blue-600">Transcribiendo...</span>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-700 leading-relaxed min-h-[80px]">
-                {DEMO_TEXT.slice(0, visibleChars)}
-                {visibleChars < DEMO_TEXT.length && (
-                  <span className="inline-block w-0.5 h-4 bg-blue-600 ml-0.5 animate-pulse" />
-                )}
-              </div>
+              {/* Live transcript appearing below */}
+              {visibleChars > 0 && (
+                <div className="bg-gray-50 rounded-xl p-3 text-sm text-gray-700 leading-relaxed">
+                  {DEMO_TEXT.slice(0, visibleChars)}
+                  {visibleChars < DEMO_TEXT.length && (
+                    <span className="inline-block w-0.5 h-4 bg-orange-500 ml-0.5 animate-pulse" />
+                  )}
+                </div>
+              )}
+
               {visibleChars >= DEMO_TEXT.length && (
                 <div className="flex items-center gap-1.5 text-xs text-green-600 animate-fade-up">
                   <Check className="w-3.5 h-3.5" />
-                  Transcripción completa
+                  Audio procesado
                 </div>
               )}
             </div>
