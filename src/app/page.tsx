@@ -321,10 +321,14 @@ export default async function Home() {
             </div>
             <span className="font-semibold text-gray-700">VozFactura</span>
           </div>
-          <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} VozFactura. Todos los derechos
-            reservados.
-          </p>
+          <div className="flex items-center gap-4 text-sm text-gray-400">
+            <p>
+              &copy; {new Date().getFullYear()} VozFactura
+            </p>
+            <Link href="/privacidad" className="hover:text-gray-600 transition-colors">
+              Privacidad
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
